@@ -2,16 +2,18 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('your-docker-hub-credentials-id') // Replace with your Jenkins credentials ID
+        DOCKER_HUB_USERNAME = 'rabinktm'
+        DOCKER_HUB_PASSWORD = 'Avionics@123'
         DOCKER_HUB_REPO = 'rabinktm/sample1'
+        IMAGE_NAME = 'hello-world'
     }
 
     stages {
         stage('Pull Docker Image') {
             steps {
                 script {
-                    echo "Pulling the hello-world image from Docker Hub..."
-                    sh 'docker pull hello-world'
+                    echo "Pulling the hello-world Docker image..."
+                    sh "docker pull ${IMAGE_NAME}"
                 }
             }
         }
@@ -19,8 +21,8 @@ pipeline {
         stage('Tag Docker Image') {
             steps {
                 script {
-                    echo "Tagging the image for pushing to Docker Hub..."
-                    sh "docker tag hello-world ${env.DOCKER_HUB_REPO}:latest"
+                    echo "Tagging the Docker image for pushing to Docker Hub..."
+                    sh "docker tag ${IMAGE_NAME} ${DOCKER_HUB_REPO}:latest"
                 }
             }
         }
@@ -28,9 +30,11 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    echo "Pushing the tagged image to Docker Hub..."
-                    sh "echo ${DOCKER_HUB_CREDENTIALS_PSW} | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin"
-                    sh "docker push ${env.DOCKER_HUB_REPO}:latest"
+                    echo "Logging into Docker Hub..."
+                    sh "echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin"
+
+                    echo "Pushing the Docker image to Docker Hub..."
+                    sh "docker push ${DOCKER_HUB_REPO}:latest"
                 }
             }
         }
@@ -40,9 +44,8 @@ pipeline {
         always {
             script {
                 echo "Cleaning up local Docker images..."
-                sh "docker rmi hello-world ${env.DOCKER_HUB_REPO}:latest"
+                sh "docker rmi ${IMAGE_NAME} ${DOCKER_HUB_REPO}:latest"
             }
         }
     }
 }
-
